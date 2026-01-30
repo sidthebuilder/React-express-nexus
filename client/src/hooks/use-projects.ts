@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, buildUrl, type CreateProjectRequest, type UpdateProjectRequest } from "@shared/routes";
+import { api, buildUrl } from "@shared/routes";
+import { type CreateProjectRequest, type UpdateProjectRequest } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 
 export function useProjects() {
@@ -40,7 +41,7 @@ export function useCreateProject() {
         body: JSON.stringify(validated),
         credentials: "include",
       });
-      
+
       if (!res.ok) {
         if (res.status === 400) {
           const error = api.projects.create.responses[400].parse(await res.json());
@@ -68,7 +69,7 @@ export function useUpdateProject() {
     mutationFn: async ({ id, ...updates }: { id: number } & UpdateProjectRequest) => {
       const validated = api.projects.update.input.parse(updates);
       const url = buildUrl(api.projects.update.path, { id });
-      
+
       const res = await fetch(url, {
         method: api.projects.update.method,
         headers: { "Content-Type": "application/json" },

@@ -71,10 +71,10 @@ export default function ProjectDetails() {
 
     const activeTask = tasks.find(t => t.id === active.id);
     const overId = over.id;
-    
+
     // Find if dropped over a container (column) or another item
     let newStatus = overId;
-    
+
     // If overId is a number, it's a task ID. Find its status.
     if (typeof overId === 'number') {
       const overTask = tasks.find(t => t.id === overId);
@@ -112,15 +112,15 @@ export default function ProjectDetails() {
           <p className="text-muted-foreground max-w-2xl truncate">{project.description}</p>
         </div>
         <div className="flex items-center gap-3">
-           <CreateTaskDialog projectId={projectId} />
+          <CreateTaskDialog projectId={projectId} />
         </div>
       </div>
 
       {/* Kanban Board */}
-      <DndContext 
-        sensors={sensors} 
-        collisionDetection={closestCorners} 
-        onDragStart={handleDragStart} 
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
         <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 overflow-x-auto pb-4">
@@ -132,9 +132,9 @@ export default function ProjectDetails() {
                   {tasksByStatus[column.id].length}
                 </span>
               </div>
-              
-              <SortableContext 
-                items={tasksByStatus[column.id].map(t => t.id)} 
+
+              <SortableContext
+                items={tasksByStatus[column.id].map(t => t.id)}
                 strategy={verticalListSortingStrategy}
               >
                 <div className="flex-1 space-y-3 overflow-y-auto px-1 min-h-[100px]">
@@ -181,9 +181,9 @@ function SortableTaskItem({ task }: { task: any }) {
 }
 
 function TaskCard({ task, isOverlay }: { task: any, isOverlay?: boolean }) {
-  const { mutate: deleteTask } = "@/hooks/use-tasks" // This hook call is tricky inside loop, better pass handler
-  // But for simple generation, let's keep it simple. Realistically actions should be lifted.
-  
+  // Note: Hooks in components inside map is okay if component is stable.
+  // Ideally pass handlers down, but for now fixed import.
+
   const priorityColor = {
     low: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
     medium: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
@@ -202,7 +202,7 @@ function TaskCard({ task, isOverlay }: { task: any, isOverlay?: boolean }) {
           </Badge>
           <GripVertical className="w-4 h-4 text-muted-foreground/30" />
         </div>
-        
+
         <div>
           <h4 className="text-sm font-semibold leading-tight text-foreground">{task.title}</h4>
           {task.description && (

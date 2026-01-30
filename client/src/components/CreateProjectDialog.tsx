@@ -39,7 +39,7 @@ type FormValues = z.infer<typeof formSchema>;
 export function CreateProjectDialog() {
   const [open, setOpen] = useState(false);
   const { mutate: createProject, isPending } = useCreateProject();
-  
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -52,7 +52,7 @@ export function CreateProjectDialog() {
   function onSubmit(values: FormValues) {
     createProject({
       ...values,
-      dueDate: values.dueDate ? new Date(values.dueDate).toISOString() : undefined,
+      dueDate: values.dueDate ? new Date(values.dueDate) : undefined,
     }, {
       onSuccess: () => {
         setOpen(false);
@@ -98,10 +98,10 @@ export function CreateProjectDialog() {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="What is this project about?" 
-                      className="resize-none bg-background/50 min-h-[100px]" 
-                      {...field} 
+                    <Textarea
+                      placeholder="What is this project about?"
+                      className="resize-none bg-background/50 min-h-[100px]"
+                      {...field}
                       value={field.value || ''}
                     />
                   </FormControl>

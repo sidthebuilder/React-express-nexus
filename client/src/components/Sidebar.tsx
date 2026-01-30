@@ -1,11 +1,11 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { 
-  LayoutDashboard, 
-  FolderKanban, 
-  ListTodo, 
-  Users, 
-  LogOut, 
+import {
+  LayoutDashboard,
+  FolderKanban,
+  ListTodo,
+  Users,
+  LogOut,
   Settings,
   Hexagon
 } from "lucide-react";
@@ -42,8 +42,8 @@ export function Sidebar() {
           return (
             <Link key={item.name} href={item.href} className={cn(
               "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
-              isActive 
-                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25" 
+              isActive
+                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}>
               <item.icon className={cn("w-5 h-5", isActive ? "stroke-[2.5]" : "stroke-2")} />
@@ -58,18 +58,18 @@ export function Sidebar() {
           <Settings className="w-5 h-5" />
           Settings
         </Link>
-        
+
         <div className="p-4 rounded-xl bg-muted/50 border border-border/50">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-blue-400 flex items-center justify-center text-white font-bold text-sm shadow-md">
-              {user?.displayName?.[0] || user?.username?.[0] || "U"}
+              {user?.username?.[0]?.toUpperCase() || "U"}
             </div>
             <div className="overflow-hidden">
-              <p className="text-sm font-semibold truncate">{user?.displayName || user?.username}</p>
-              <p className="text-xs text-muted-foreground truncate">{user?.email || "User"}</p>
+              <p className="text-sm font-semibold truncate">{user?.firstName ? `${user.firstName} ${user.lastName}` : user?.username}</p>
+              <p className="text-xs text-muted-foreground truncate">@{user?.username}</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => logout()}
             className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold bg-background border border-border hover:bg-muted hover:text-foreground transition-colors"
           >

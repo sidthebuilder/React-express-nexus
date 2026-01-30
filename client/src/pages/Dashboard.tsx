@@ -2,20 +2,20 @@ import { useProjects } from "@/hooks/use-projects";
 import { useTasks } from "@/hooks/use-tasks";
 import { useActivity } from "@/hooks/use-activity";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   Cell
 } from 'recharts';
-import { 
-  ArrowUpRight, 
-  CheckCircle2, 
-  Clock, 
+import {
+  ArrowUpRight,
+  CheckCircle2,
+  Clock,
   AlertCircle,
   Activity,
   FolderKanban
@@ -54,35 +54,35 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCard 
-          title="Active Projects" 
-          value={activeProjects} 
+        <StatsCard
+          title="Active Projects"
+          value={activeProjects}
           icon={FolderKanban}
-          trend="+12%" 
+          trend="+12%"
           isLoading={projectsLoading}
           color="text-blue-500"
         />
-        <StatsCard 
-          title="Tasks Completed" 
-          value={completedTasks} 
+        <StatsCard
+          title="Tasks Completed"
+          value={completedTasks}
           icon={CheckCircle2}
-          trend="+5%" 
+          trend="+5%"
           isLoading={tasksLoading}
           color="text-green-500"
         />
-        <StatsCard 
-          title="Pending Tasks" 
-          value={pendingTasks} 
+        <StatsCard
+          title="Pending Tasks"
+          value={pendingTasks}
           icon={Clock}
-          trend="-2%" 
+          trend="-2%"
           isLoading={tasksLoading}
           color="text-orange-500"
         />
-        <StatsCard 
-          title="High Priority" 
-          value={highPriorityTasks} 
+        <StatsCard
+          title="High Priority"
+          value={highPriorityTasks}
           icon={AlertCircle}
-          trend="Action needed" 
+          trend="Action needed"
           isLoading={tasksLoading}
           color="text-red-500"
         />
@@ -104,15 +104,15 @@ export default function Dashboard() {
                   <BarChart data={projectProgressData} layout="vertical" margin={{ left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#333" horizontal={false} />
                     <XAxis type="number" domain={[0, 100]} hide />
-                    <YAxis 
-                      dataKey="name" 
-                      type="category" 
-                      width={120} 
-                      tick={{ fill: '#9ca3af', fontSize: 12 }} 
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      width={120}
+                      tick={{ fill: '#9ca3af', fontSize: 12 }}
                       axisLine={false}
                       tickLine={false}
                     />
-                    <Tooltip 
+                    <Tooltip
                       cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                       contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px' }}
                     />
@@ -163,7 +163,8 @@ export default function Dashboard() {
                       <div className="absolute left-[3.5px] top-4 bottom-0 w-[1px] bg-border last:hidden" />
                       <div className="space-y-1">
                         <p className="text-sm text-foreground font-medium leading-none">
-                          {log.user?.displayName || log.user?.username || "System"} <span className="text-muted-foreground font-normal">{log.action.replace('_', ' ')}</span>
+                          {//@ts-ignore
+                            log.user?.username || "System"} <span className="text-muted-foreground font-normal">{log.action.replace('_', ' ')}</span>
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {log.details || "Updated a task"}

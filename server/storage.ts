@@ -1,12 +1,16 @@
 import { db } from "./db";
 import {
   projects, tasks, activityLogs, users,
-  type User,
+  type User, type UpsertUser,
   type Project, type InsertProject, type UpdateProjectRequest,
   type Task, type InsertTask, type UpdateTaskRequest,
   type ActivityLog
 } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
+import session from "express-session";
+import createMemoryStore from "memorystore";
+
+const MemoryStore = createMemoryStore(session);
 
 export interface IStorage {
   // Projects
@@ -25,13 +29,25 @@ export interface IStorage {
 
   // Activity
   getRecentActivity(): Promise<(ActivityLog & { user: User | null })[]>;
-  createActivityLog(log: { userId?: string; projectId?: number; action: string; details?: string }): Promise<void>;
-  
-  // User helper for seeding
+  createActivityLog(log: { userId?: number; projectId?: number; action: string; details?: string }): Promise<void>;
+
+  // User methods
+  getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: UpsertUser): Promise<User>;
+
+  sessionStore: session.Store;
 }
 
 export class DatabaseStorage implements IStorage {
+  sessionStore: session.Store;
+
+  constructor() {
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    });
+  }
+
   // Project methods
   async getProjects(): Promise<Project[]> {
     return await db.select().from(projects).orderBy(desc(projects.createdAt));
@@ -93,8 +109,6 @@ export class DatabaseStorage implements IStorage {
 
   // Activity methods
   async getRecentActivity(): Promise<(ActivityLog & { user: User | null })[]> {
-    // Use proper join instead of query builder if relation inference is tricky with multiple schema files
-    // But relations should work if imported correctly
     return await db.query.activityLogs.findMany({
       orderBy: desc(activityLogs.createdAt),
       limit: 20,
@@ -104,17 +118,24 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async createActivityLog(log: { userId?: string; projectId?: number; action: string; details?: string }): Promise<void> {
+  async createActivityLog(log: { userId?: number; projectId?: number; action: string; details?: string }): Promise<void> {
     await db.insert(activityLogs).values(log);
   }
 
-  // User helper
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    // This assumes username exists on User model which it might not if it's from auth.ts (it has email, not username?)
-    // auth.ts has: email, firstName, lastName. No username.
-    // So we should check by email or just return first user.
-    const [user] = await db.select().from(users).limit(1);
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async createUser(user: UpsertUser): Promise<User> {
+    const [newUser] = await db.insert(users).values(user).returning();
+    return newUser;
   }
 }
 

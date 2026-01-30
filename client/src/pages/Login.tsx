@@ -1,13 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Hexagon, ArrowRight, ShieldCheck, Zap, Globe } from "lucide-react";
-import { useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Hexagon, ArrowRight, ShieldCheck, Zap, Globe, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 
 export default function Login() {
-  const { user, isLoading } = useAuth();
+  const { user, login, isLoggingIn } = useAuth();
   const [_, setLocation] = useLocation();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -15,11 +19,10 @@ export default function Login() {
     }
   }, [user, setLocation]);
 
-  const handleLogin = () => {
-    window.location.href = "/api/login";
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    login({ username, password });
   };
-
-  if (isLoading) return null;
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
@@ -35,7 +38,6 @@ export default function Login() {
           </div>
           <span className="text-xl font-bold font-display tracking-tight">Nexus</span>
         </div>
-        <Button variant="outline" className="hidden sm:flex" onClick={handleLogin}>Log In</Button>
       </nav>
 
       {/* Hero Section */}
@@ -48,14 +50,11 @@ export default function Login() {
             The enterprise-grade platform for modern teams. Streamline workflows, track progress, and ship faster than ever before.
           </p>
           <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
-            <Button size="lg" className="w-full sm:w-auto h-12 px-8 text-base shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all hover:-translate-y-0.5" onClick={handleLogin}>
+            <Button size="lg" className="w-full sm:w-auto h-12 px-8 text-base shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all hover:-translate-y-0.5" onClick={() => document.getElementById('login-form')?.scrollIntoView({ behavior: 'smooth' })}>
               Get Started <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
-            <Button size="lg" variant="secondary" className="w-full sm:w-auto h-12 px-8 text-base bg-secondary/50 hover:bg-secondary border border-white/10" onClick={() => window.open('https://replit.com', '_blank')}>
-              Learn More
-            </Button>
           </div>
-          
+
           <div className="pt-8 flex items-center justify-center lg:justify-start gap-8 text-sm text-muted-foreground font-medium">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-primary" /> Enterprise Security
@@ -70,7 +69,7 @@ export default function Login() {
         </div>
 
         {/* Login Card */}
-        <div className="flex-1 w-full max-w-md">
+        <div id="login-form" className="flex-1 w-full max-w-md">
           <Card className="glass-card border-white/10 shadow-2xl">
             <CardHeader className="space-y-1 pb-6">
               <CardTitle className="text-2xl text-center">Welcome Back</CardTitle>
@@ -79,14 +78,51 @@ export default function Login() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full h-12 text-base font-medium relative overflow-hidden group" onClick={handleLogin}>
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-blue-500 opacity-80 group-hover:opacity-100 transition-opacity" />
-                <span className="relative flex items-center justify-center gap-2">
-                  Continue with Replit <ArrowRight className="w-4 h-4" />
-                </span>
-              </Button>
-              <p className="text-xs text-center text-muted-foreground mt-6">
-                By clicking continue, you agree to our Terms of Service and Privacy Policy.
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    placeholder="Enter your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                    className="bg-background/50 border-white/10 focus:border-primary/50"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="bg-background/50 border-white/10 focus:border-primary/50"
+                  />
+                </div>
+
+                <Button type="submit" className="w-full h-12 text-base font-medium mt-2" disabled={isLoggingIn}>
+                  {isLoggingIn ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Logging in...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
+                </Button>
+              </form>
+
+              <div className="mt-4 text-center">
+                <p className="text-xs text-muted-foreground">
+                  Demo credentials: admin / admin123
+                </p>
+              </div>
+
+              <p className="text-xs text-center text-muted-foreground mt-4">
+                By clicking sign in, you agree to our Terms of Service and Privacy Policy.
               </p>
             </CardContent>
           </Card>

@@ -1,5 +1,5 @@
-import { pgTable, text, serial, integer, boolean, timestamp, varchar } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { relations, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -8,36 +8,36 @@ export * from "./models/auth";
 
 // === TABLE DEFINITIONS ===
 
-export const projects = pgTable("projects", {
-  id: serial("id").primaryKey(),
+export const projects = sqliteTable("projects", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   description: text("description"),
   status: text("status").default("active"), // active, archived, completed
-  ownerId: varchar("owner_id").references(() => users.id),
-  startDate: timestamp("start_date").defaultNow(),
-  dueDate: timestamp("due_date"),
-  createdAt: timestamp("created_at").defaultNow(),
+  ownerId: integer("owner_id").references(() => users.id),
+  startDate: integer("start_date", { mode: "timestamp" }).default(sql`(unixepoch())`),
+  dueDate: integer("due_date", { mode: "timestamp" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
 });
 
-export const tasks = pgTable("tasks", {
-  id: serial("id").primaryKey(),
+export const tasks = sqliteTable("tasks", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   projectId: integer("project_id").references(() => projects.id).notNull(),
   title: text("title").notNull(),
   description: text("description"),
   status: text("status").default("todo"), // todo, in_progress, review, done
   priority: text("priority").default("medium"), // low, medium, high
-  assigneeId: varchar("assignee_id").references(() => users.id),
-  dueDate: timestamp("due_date"),
-  createdAt: timestamp("created_at").defaultNow(),
+  assigneeId: integer("assignee_id").references(() => users.id),
+  dueDate: integer("due_date", { mode: "timestamp" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
 });
 
-export const activityLogs = pgTable("activity_logs", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").references(() => users.id),
+export const activityLogs = sqliteTable("activity_logs", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  userId: integer("user_id").references(() => users.id),
   projectId: integer("project_id").references(() => projects.id),
   action: text("action").notNull(), // e.g., "created_task", "updated_status"
   details: text("details"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
 });
 
 // === RELATIONS ===
@@ -106,7 +106,7 @@ export type UpdateTaskRequest = Partial<InsertTask>;
 // User type is imported from auth.ts
 import type { User } from "./models/auth";
 
-export type ProjectWithDetails = Project & { 
+export type ProjectWithDetails = Project & {
   owner?: User | null;
   tasks?: Task[];
 };

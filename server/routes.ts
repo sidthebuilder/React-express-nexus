@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { setupAuth } from "./replit_integrations/auth";
+import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
@@ -10,7 +10,7 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   // Setup Auth first
-  setupAuth(app);
+  await setupAuth(app);
 
   // Projects
   app.get(api.projects.list.path, async (req, res) => {
@@ -20,10 +20,10 @@ export async function registerRoutes(
   });
 
   app.get(api.projects.get.path, async (req, res) => {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     const project = await storage.getProject(id);
     if (!project) return res.status(404).json({ message: "Project not found" });
-    
+
     // Also fetch tasks for the project details view
     const tasks = await storage.getTasks(id);
     res.json({ ...project, tasks });
@@ -31,21 +31,21 @@ export async function registerRoutes(
 
   app.post(api.projects.create.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     try {
       const data = api.projects.create.input.parse(req.body);
       const project = await storage.createProject({
         ...data,
         ownerId: req.user!.id
       });
-      
+
       await storage.createActivityLog({
         userId: req.user!.id,
         projectId: project.id,
         action: "created_project",
         details: `Created project: ${project.name}`
       });
-      
+
       res.status(201).json(project);
     } catch (e) {
       if (e instanceof z.ZodError) {
@@ -58,19 +58,19 @@ export async function registerRoutes(
 
   app.patch(api.projects.update.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(req.params.id as string);
       const data = api.projects.update.input.parse(req.body);
       const project = await storage.updateProject(id, data);
-      
+
       await storage.createActivityLog({
         userId: req.user!.id,
         projectId: project.id,
         action: "updated_project",
         details: `Updated project: ${project.name}`
       });
-      
+
       res.json(project);
     } catch (e) {
       if (e instanceof z.ZodError) {
@@ -83,9 +83,9 @@ export async function registerRoutes(
 
   app.delete(api.projects.delete.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(req.params.id as string);
       await storage.deleteProject(id);
       res.sendStatus(204);
     } catch (e) {
@@ -102,21 +102,21 @@ export async function registerRoutes(
 
   app.post(api.tasks.create.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     try {
       const data = api.tasks.create.input.parse(req.body);
       const task = await storage.createTask({
         ...data,
-        assigneeId: req.user!.id // Assign to self by default if not specified? Or handle in input
+        assigneeId: req.user!.id
       });
-      
+
       await storage.createActivityLog({
         userId: req.user!.id,
         projectId: task.projectId,
         action: "created_task",
         details: `Created task: ${task.title}`
       });
-      
+
       res.status(201).json(task);
     } catch (e) {
       if (e instanceof z.ZodError) {
@@ -129,12 +129,12 @@ export async function registerRoutes(
 
   app.patch(api.tasks.update.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(req.params.id as string);
       const data = api.tasks.update.input.parse(req.body);
       const task = await storage.updateTask(id, data);
-      
+
       // Log status changes
       if (data.status) {
         await storage.createActivityLog({
@@ -144,7 +144,7 @@ export async function registerRoutes(
           details: `Moved task '${task.title}' to ${data.status}`
         });
       }
-      
+
       res.json(task);
     } catch (e) {
       if (e instanceof z.ZodError) {
@@ -157,9 +157,9 @@ export async function registerRoutes(
 
   app.delete(api.tasks.delete.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(req.params.id as string);
       await storage.deleteTask(id);
       res.sendStatus(204);
     } catch (e) {
@@ -173,53 +173,5 @@ export async function registerRoutes(
     res.json(activity);
   });
 
-  // Initial seed
-  await seedData();
-
   return httpServer;
-}
-
-// Seed function to create initial data if empty
-async function seedData() {
-  const projects = await storage.getProjects();
-  if (projects.length === 0) {
-    console.log("Seeding database...");
-    
-    // Create a system project
-    const project = await storage.createProject({
-      name: "Welcome Project",
-      description: "This is a sample project to get you started.",
-      status: "active",
-      startDate: new Date(),
-      dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), // 30 days
-      ownerId: null // No owner for system project
-    });
-
-    await storage.createTask({
-      projectId: project.id,
-      title: "Explore the dashboard",
-      description: "Check out the project statistics and activity feed.",
-      status: "done",
-      priority: "high",
-      dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 1),
-      assigneeId: null
-    });
-
-    await storage.createTask({
-      projectId: project.id,
-      title: "Create your first project",
-      description: "Click the 'New Project' button to start managing your own work.",
-      status: "todo",
-      priority: "medium",
-      dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-      assigneeId: null
-    });
-    
-    await storage.createActivityLog({
-      action: "system_init",
-      details: "System initialized with sample data",
-      projectId: project.id,
-      userId: null
-    });
-  }
 }

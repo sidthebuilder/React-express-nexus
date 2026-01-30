@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, buildUrl, type CreateTaskRequest, type UpdateTaskRequest } from "@shared/routes";
+import { api, buildUrl } from "@shared/routes";
+import { type CreateTaskRequest, type UpdateTaskRequest } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
@@ -7,10 +8,10 @@ export function useTasks(projectId?: number) {
   return useQuery({
     queryKey: [api.tasks.list.path, projectId],
     queryFn: async () => {
-      const url = projectId 
-        ? `${api.tasks.list.path}?projectId=${projectId}` 
+      const url = projectId
+        ? `${api.tasks.list.path}?projectId=${projectId}`
         : api.tasks.list.path;
-        
+
       const res = await fetch(url, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch tasks");
       return api.tasks.list.responses[200].parse(await res.json());
@@ -37,7 +38,7 @@ export function useCreateTask() {
         body: JSON.stringify(validated),
         credentials: "include",
       });
-      
+
       if (!res.ok) {
         if (res.status === 400) {
           const error = api.tasks.create.responses[400].parse(await res.json());
@@ -66,7 +67,7 @@ export function useUpdateTask() {
     mutationFn: async ({ id, ...updates }: { id: number } & UpdateTaskRequest) => {
       const validated = api.tasks.update.input.parse(updates);
       const url = buildUrl(api.tasks.update.path, { id });
-      
+
       const res = await fetch(url, {
         method: api.tasks.update.method,
         headers: { "Content-Type": "application/json" },
@@ -103,7 +104,7 @@ export function useDeleteTask() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.tasks.list.path] });
       // We'd ideally invalidate the specific project too, but we don't know the ID here easily without extra state
-      queryClient.invalidateQueries({ queryKey: [api.projects.get.path] }); 
+      queryClient.invalidateQueries({ queryKey: [api.projects.get.path] });
       toast({ title: "Deleted", description: "Task deleted successfully" });
     },
   });

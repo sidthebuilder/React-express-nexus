@@ -52,7 +52,7 @@ interface CreateTaskDialogProps {
 export function CreateTaskDialog({ projectId, trigger }: CreateTaskDialogProps) {
   const [open, setOpen] = useState(false);
   const { mutate: createTask, isPending } = useCreateTask();
-  
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -67,7 +67,7 @@ export function CreateTaskDialog({ projectId, trigger }: CreateTaskDialogProps) 
     createTask({
       ...values,
       projectId,
-      dueDate: values.dueDate ? new Date(values.dueDate).toISOString() : undefined,
+      dueDate: values.dueDate ? new Date(values.dueDate) : undefined,
     }, {
       onSuccess: () => {
         setOpen(false);
@@ -152,10 +152,10 @@ export function CreateTaskDialog({ projectId, trigger }: CreateTaskDialogProps) 
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Add details about this task..." 
-                      className="resize-none bg-background/50 min-h-[100px]" 
-                      {...field} 
+                    <Textarea
+                      placeholder="Add details about this task..."
+                      className="resize-none bg-background/50 min-h-[100px]"
+                      {...field}
                       value={field.value || ''}
                     />
                   </FormControl>
